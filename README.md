@@ -78,3 +78,41 @@
   "space": "production"
   "sessionToken": "your session token or something"
 }
+```
+
+### Response (Active Competitions)
+```json
+{
+  "ziqniMemberToken": "abc123xyz",
+  "competitions": [
+    {
+      "competitionId": "comp1",
+      "name": "Spring Challenge",
+      "startDate": "2025-01-01T00:00:00Z",
+      "endDate": "2025-02-01T00:00:00Z"
+      "contests": [
+        "name": "Spring Challenge",
+              "startDate": "2025-01-01T00:00:00Z",
+              "endDate": "2025-02-01T00:00:00Z"
+      ]
+    }
+  ]
+}
+```
+
+### Response (No Active Competitions)
+```json
+{
+  "ziqniMemberToken": "",
+  "competitions": []
+}
+```
+
+### Error Response
+- **Endpoint**: `POST /check-competitions`
+```json
+{
+  "error": "Invalid parameters"
+}
+```
+
