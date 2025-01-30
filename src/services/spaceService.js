@@ -1,4 +1,5 @@
 const axios = require('axios');
+const logger = require('../utils/logger');
 
 /**
  * Fetches the list of allowed spaces from the external API.
@@ -20,8 +21,7 @@ const getAllowedSpaces = async (token) => {
 
     return response.data.results;
   } catch (error) {
-    console.error('Error fetching allowed spaces:', error.code);
-
+    logger.error('Error fetching allowed spaces: ' + error.code);
     throw new Error(error.message || 'Failed to fetch allowed spaces');
   }
 };

@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { apiClient } = require('../utils/apiClient');
+const logger = require('../utils/logger');
 
 /**
  * Generates a session token for a given memberRefId and apiKey.
@@ -9,7 +10,7 @@ const { apiClient } = require('../utils/apiClient');
  */
 async function generateSessionToken(memberRefId, apiKey) {
   if (!memberRefId || typeof memberRefId !== 'string') {
-    console.error('Invalid or missing "memberRefId". It must be a string.');
+    logger.error(`Invalid or missing "memberRefId": ${memberRefId}`);
     return {
       status: 400,
       error: 'Invalid or missing "memberRefId". It must be a string.',
@@ -17,7 +18,7 @@ async function generateSessionToken(memberRefId, apiKey) {
   }
 
   if (!apiKey || typeof apiKey !== 'string') {
-    console.error('Invalid or missing "apiKey". It must be a string.');
+    logger.error(`Invalid or missing "apiKey": ${apiKey}`)
     return {
       status: 400,
       error: 'Invalid or missing "apiKey". It must be a string.',
@@ -25,6 +26,7 @@ async function generateSessionToken(memberRefId, apiKey) {
   }
 
   try {
+    logger.info('Generating session token...');
     const response = await axios.post('https://api.ziqni.com/member-token', {
       member: memberRefId,
       apiKey: apiKey,
@@ -33,12 +35,10 @@ async function generateSessionToken(memberRefId, apiKey) {
       resource: 'ziqni-gapi',
     });
 
+    logger.info('Session token generated successfully.');
     return { status: 200, token: response.data.data.jwtToken };
   } catch (error) {
-    console.error(
-      'Error generating session token:',
-      error.response?.data || error.message
-    );
+    logger.error('Error generating session token:', error.response?.data || error.message);
     return {
       status: 500,
       error: 'Failed to generate session token.',
@@ -56,6 +56,8 @@ async function generateSessionToken(memberRefId, apiKey) {
  */
 async function getActiveCompetitions(memberRefId, space, token, apiKey) {
   try {
+    logger.info(`Fetching active competitions for memberRefId: ${memberRefId}, space: ${space}`);
+
     const sessionTokenResponse = await generateSessionToken(
       memberRefId,
       apiKey
@@ -66,6 +68,7 @@ async function getActiveCompetitions(memberRefId, space, token, apiKey) {
     const contestsUrl = `/contests/query`;
 
     // Fetch active competitions
+    logger.info('Fetching active competitions...');
     const competitionsResponse = await api.post(competitionsUrl, {
       must: [
         {
@@ -84,8 +87,10 @@ async function getActiveCompetitions(memberRefId, space, token, apiKey) {
     });
 
     const competitions = competitionsResponse.data.results || [];
+    logger.info(`Found ${competitions.length} active competitions.`);
 
     // Fetch contests for each competition
+    logger.info('Fetching contests for each competition...');
     const competitionsWithContests = await Promise.all(
       competitions.map(async (competition) => {
         const contestsResponse = await api.post(contestsUrl, {
@@ -106,6 +111,7 @@ async function getActiveCompetitions(memberRefId, space, token, apiKey) {
         });
 
         const contests = contestsResponse.data.results || [];
+        logger.info(`Found ${contests.length} contests for competition ${competition.id}.`);
 
         return {
           competitionId: competition.id,
@@ -118,12 +124,13 @@ async function getActiveCompetitions(memberRefId, space, token, apiKey) {
       })
     );
 
+    logger.info('Fetched active competitions and contests successfully.');
     return {
       sessionToken: sessionTokenResponse.token,
       competitions: competitionsWithContests,
     };
   } catch (error) {
-    console.error('Error fetching competitions:', error);
+    logger.error('Error fetching competitions:', error);
     return res.status(500).json({ error: 'Failed to fetch competitions.' });
   }
 }
