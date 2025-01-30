@@ -1,5 +1,12 @@
 const axios = require('axios');
 
+/**
+ * Fetches the list of allowed spaces from the external API.
+ *
+ * @param {string} token - Authorization token
+ * @returns {Promise<Array>} - List of allowed spaces
+ * @throws {Error} - Throws an error if the request fails
+ */
 const getAllowedSpaces = async (token) => {
   const url = 'https://api.ziqni.com/spaces';
 
@@ -14,9 +21,8 @@ const getAllowedSpaces = async (token) => {
     return response.data.results;
   } catch (error) {
     console.error('Error fetching allowed spaces:', error.code);
-    return res.status(error.status || 500).json({
-      error: error.code || 'Failed to fetch allowed spaces',
-    });
+
+    throw new Error(error.message || 'Failed to fetch allowed spaces');
   }
 };
 

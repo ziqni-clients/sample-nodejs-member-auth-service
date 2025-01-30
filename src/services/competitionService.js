@@ -1,6 +1,12 @@
 const axios = require('axios');
 const { apiClient } = require('../utils/apiClient');
 
+/**
+ * Generates a session token for a given memberRefId and apiKey.
+ * @param {string} memberRefId - The reference ID of the member.
+ * @param {string} apiKey - The API key for authentication.
+ * @returns {Promise<{status: number, token?: string, error?: string}>}
+ */
 async function generateSessionToken(memberRefId, apiKey) {
   if (!memberRefId || typeof memberRefId !== 'string') {
     console.error('Invalid or missing "memberRefId". It must be a string.');
@@ -40,6 +46,14 @@ async function generateSessionToken(memberRefId, apiKey) {
   }
 }
 
+/**
+ * Fetches active competitions along with their associated contests.
+ * @param {string} memberRefId - The reference ID of the member.
+ * @param {string} space - The space where competitions are located.
+ * @param {string} token - The authentication token.
+ * @param {string} apiKey - The API key for authentication.
+ * @returns {Promise<{sessionToken: string, competitions: Array}>}
+ */
 async function getActiveCompetitions(memberRefId, space, token, apiKey) {
   try {
     const sessionTokenResponse = await generateSessionToken(
@@ -51,6 +65,7 @@ async function getActiveCompetitions(memberRefId, space, token, apiKey) {
     const competitionsUrl = `/competitions/query`;
     const contestsUrl = `/contests/query`;
 
+    // Fetch active competitions
     const competitionsResponse = await api.post(competitionsUrl, {
       must: [
         {
@@ -70,6 +85,7 @@ async function getActiveCompetitions(memberRefId, space, token, apiKey) {
 
     const competitions = competitionsResponse.data.results || [];
 
+    // Fetch contests for each competition
     const competitionsWithContests = await Promise.all(
       competitions.map(async (competition) => {
         const contestsResponse = await api.post(contestsUrl, {

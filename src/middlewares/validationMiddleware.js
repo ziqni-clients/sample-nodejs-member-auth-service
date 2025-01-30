@@ -1,7 +1,15 @@
 const { getAllowedSpaces } = require('../services/spaceService');
 
+/**
+ * Middleware to validate request parameters.
+ * Ensures `memberRefId` and `space` are provided and checks if the space is allowed.
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
 const validateParams = async (req, res, next) => {
-  const { memberRefId, space } = req.query; // get
+  const { memberRefId, space } = req.query; // GET request parameters
   const token = req.rawHeaders[1]; // Token from previous middleware
 
   if (!memberRefId || typeof memberRefId !== 'string') {
@@ -17,6 +25,7 @@ const validateParams = async (req, res, next) => {
   }
 
   try {
+    // Fetch allowed spaces using the provided token
     const allowedSpaces = await getAllowedSpaces(token);
 
     const isSpaceAllowed = allowedSpaces.some(
