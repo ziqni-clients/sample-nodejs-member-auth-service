@@ -1,5 +1,5 @@
 const axios = require('axios');
-const post_data_url = process.env.POST_DATA_URL;
+const post_data_url = process.env.URL;
 
 const apiClient = async (token) => {
   return axios.create({

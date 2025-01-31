@@ -28,6 +28,7 @@ const checkCompetitions = async (req, res) => {
 
   // Check if data is available in cache
   const cachedData = cache.get(cacheKey);
+
   if (cachedData) {
     logger.info('Returning data from cache');
     return res.json(cachedData);

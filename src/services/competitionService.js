@@ -1,50 +1,6 @@
-const axios = require('axios');
+const { generateSessionToken } = require('./generateSessionToken');
 const { apiClient } = require('../utils/apiClient');
 const logger = require('../utils/logger');
-
-/**
- * Generates a session token for a given memberRefId and apiKey.
- * @param {string} memberRefId - The reference ID of the member.
- * @param {string} apiKey - The API key for authentication.
- * @returns {Promise<{status: number, token?: string, error?: string}>}
- */
-async function generateSessionToken(memberRefId, apiKey) {
-  if (!memberRefId || typeof memberRefId !== 'string') {
-    logger.error(`Invalid or missing "memberRefId": ${memberRefId}`);
-    return {
-      status: 400,
-      error: 'Invalid or missing "memberRefId". It must be a string.',
-    };
-  }
-
-  if (!apiKey || typeof apiKey !== 'string') {
-    logger.error(`Invalid or missing "apiKey": ${apiKey}`)
-    return {
-      status: 400,
-      error: 'Invalid or missing "apiKey". It must be a string.',
-    };
-  }
-
-  try {
-    logger.info('Generating session token...');
-    const response = await axios.post('https://api.ziqni.com/member-token', {
-      member: memberRefId,
-      apiKey: apiKey,
-      isReferenceId: true,
-      expires: 1800,
-      resource: 'ziqni-gapi',
-    });
-
-    logger.info('Session token generated successfully.');
-    return { status: 200, token: response.data.data.jwtToken };
-  } catch (error) {
-    logger.error('Error generating session token:', error.response?.data || error.message);
-    return {
-      status: 500,
-      error: 'Failed to generate session token.',
-    };
-  }
-}
 
 /**
  * Fetches active competitions along with their associated contests.
@@ -62,6 +18,11 @@ async function getActiveCompetitions(memberRefId, space, token, apiKey) {
       memberRefId,
       apiKey
     );
+
+    if (sessionTokenResponse.status !== 200) {
+      return { error: sessionTokenResponse.error || 'Failed to generate session token.' };
+    }
+
     const api = await apiClient(token);
 
     const competitionsUrl = `/competitions/query`;
@@ -118,7 +79,7 @@ async function getActiveCompetitions(memberRefId, space, token, apiKey) {
           name: competition.name,
           startDate: competition.scheduledStartDate,
           endDate: competition.scheduledEndDate,
-          status: competition.status.toLowerCase(),
+          status: competition.status,
           contests,
         };
       })
@@ -131,7 +92,7 @@ async function getActiveCompetitions(memberRefId, space, token, apiKey) {
     };
   } catch (error) {
     logger.error('Error fetching competitions:', error);
-    return res.status(500).json({ error: 'Failed to fetch competitions.' });
+    return { error: 'Failed to fetch competitions.' };
   }
 }
 
